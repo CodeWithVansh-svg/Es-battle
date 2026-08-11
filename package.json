@@ -1,0 +1,12 @@
+{
+  "name": "es-battle",
+  "version": "2.0.0",
+  "private": true,
+  "description": "ES Battle tournament app \u2014 Vercel + Neon shared backend",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
+  },
+  "type": "module"
+}

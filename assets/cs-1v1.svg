@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0905"/><stop offset=".52" stop-color="#2d2110"/><stop offset="1" stop-color="#b45309"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="8" result="x"/><feMerge><feMergeNode in="x"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="1200" height="520" fill="url(#g)"/><path d="M0 400L210 220 360 330 540 100 760 310 970 170 1200 350V520H0Z" fill="#11100b" opacity=".62"/>
+<g opacity=".18" stroke="#fde68a"><path d="M0 90H1200M0 170H1200M0 250H1200M0 330H1200M0 410H1200"/></g>
+<g filter="url(#b)" transform="translate(600 250)"><circle r="122" fill="none" stroke="#fbbf24" stroke-width="3" opacity=".45"/><circle r="92" fill="#1a1307" stroke="#fbbf24" stroke-width="2"/><path d="M-57 42L-25-62 3-20 36-77 65 44 31 30 4 70-22 28Z" fill="#fbbf24"/><path d="M-54 57H61" stroke="#fff7c2" stroke-width="5" stroke-linecap="round"/></g>
+<text x="70" y="95" fill="#fde68a" font-family="Arial" font-size="24" font-weight="700" letter-spacing="6">ES BATTLE // STRIKE SERIES</text><text x="70" y="390" fill="white" font-family="Arial" font-size="62" font-weight="900" letter-spacing="3">CS 1V1</text><text x="74" y="432" fill="#fbbf24" font-family="Arial" font-size="24" font-weight="700" letter-spacing="8">CUSTOM DUEL</text><text x="1010" y="465" fill="#fcd34d" font-family="monospace" font-size="18">02 // STRIKE</text>
+</svg>

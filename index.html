@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-b from-[#050810] via-[#0a1428] to-[#0f2747] min-h-screen">
+    <div id="app-content" class="max-w-4xl mx-auto my-12 p-10 bg-white rounded-3xl shadow-2xl border border-gray-100">
+        <div class="flex items-center justify-between gap-4 mb-8 flex-wrap">
+            <h1 class="m-0 text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#2563eb] to-[#38bdf8] bg-clip-text text-transparent">Welcome</h1>
+            <div class="flex gap-3 flex-wrap">
+                <a href="tournament.html" class="px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">⚔️ Tournaments</a>
+                <a href="leaderboard.html" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">🏆 Leaderboard</a>
+                <button id="logout-button" type="button" class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">Logout</button>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN PANEL ================= -->
+        <div id="admin-panel" class="hidden">
+            <div class="flex items-center justify-between gap-3 mb-6 flex-wrap"><h2 class="text-2xl font-bold text-gray-900 pb-3 border-b-4 border-[#2563eb] inline-block">Admin Dashboard</h2><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold tracking-wider">ADMIN MODE</span></div>
+
+            <!-- Lonewolf 1v1 admin card -->
+            <div class="bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 rounded-2xl p-7 shadow-md mb-6" data-match-admin="lonewolf">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h3 class="text-xl font-bold text-gray-900">🐺 Lonewolf 1v1</h3>
+                    <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">ENTRY 10 · PRIZE 15</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-5">Configure the Lonewolf 1v1 room. Players pay 10 coins to join; room name &amp; password are revealed after joining (and timing rules below).</p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <label class="block"><span class="text-sm font-semibold text-gray-700">Room Name</span><input id="lonewolf-room-name" type="text" maxlength="60" placeholder="e.g. Lonewolf Night Arena" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"></label>
+                    <label class="block"><span class="text-sm font-semibold text-gray-700">Room Password</span><input id="lonewolf-room-password" type="text" maxlength="40" placeholder="Enter room password" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"></label>
+                </div>
+                <label class="block mt-4"><span class="text-sm font-semibold text-gray-700">Description</span><textarea id="lonewolf-description" rows="3" maxlength="300" placeholder="Map, rules, how the match works..." class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea></label>
+                <div class="mt-4 grid md:grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-sm font-semibold text-gray-700">Timing mode</span>
+                        <select id="lonewolf-timing-mode" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="open">Join anytime (no deadline)</option>
+                            <option value="before">Join anytime before a time</option>
+                            <option value="at">Room available at a specific time</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-gray-700">Time (HH:MM, 24h)</span>
+                        <input id="lonewolf-timing-time" type="time" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">“Before” = players can join until that time. “At” = room name/password unlock at that time (join still allowed earlier; reveal waits until then).</p>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button id="lonewolf-save-button" type="button" class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold shadow-lg hover:-translate-y-0.5 transition">💾 SAVE LONEWOLF ROOM</button>
+                    <button id="lonewolf-clear-button" type="button" class="px-6 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition">Clear</button>
+                </div>
+                <p id="lonewolf-admin-status" class="mt-3 text-sm text-gray-600"></p>
+            </div>
+
+            <!-- CS Custom 1v1 admin card -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-7 shadow-md mb-6" data-match-admin="cs1v1">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h3 class="text-xl font-bold text-gray-900">🎯 CS Custom 1v1</h3>
+                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">ENTRY 10 · PRIZE 15</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-5">Configure the CS Custom 1v1 room. Players pay 10 coins to join; room name &amp; password are revealed after joining (and timing rules below).</p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <label class="block"><span class="text-sm font-semibold text-gray-700">Room Name</span><input id="cs1v1-room-name" type="text" maxlength="60" placeholder="e.g. CS Custom Arena" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500"></label>
+                    <label class="block"><span class="text-sm font-semibold text-gray-700">Room Password</span><input id="cs1v1-room-password" type="text" maxlength="40" placeholder="Enter room password" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500"></label>
+                </div>
+                <label class="block mt-4"><span class="text-sm font-semibold text-gray-700">Description</span><textarea id="cs1v1-description" rows="3" maxlength="300" placeholder="Map, rules, how the match works..." class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea></label>
+                <div class="mt-4 grid md:grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-sm font-semibold text-gray-700">Timing mode</span>
+                        <select id="cs1v1-timing-mode" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                            <option value="open">Join anytime (no deadline)</option>
+                            <option value="before">Join anytime before a time</option>
+                            <option value="at">Room available at a specific time</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-gray-700">Time (HH:MM, 24h)</span>
+                        <input id="cs1v1-timing-time" type="time" class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500">
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">“Before” = players can join until that time. “At” = room name/password unlock at that time (join still allowed earlier; reveal waits until then).</p>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button id="cs1v1-save-button" type="button" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold shadow-lg hover:-translate-y-0.5 transition">💾 SAVE CS CUSTOM ROOM</button>
+                    <button id="cs1v1-clear-button" type="button" class="px-6 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition">Clear</button>
+                </div>
+                <p id="cs1v1-admin-status" class="mt-3 text-sm text-gray-600"></p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">👥 Registered Accounts</h3>
+                <div id="admin-users" class="grid gap-3 sm:grid-cols-2"></div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">⚡ Pending Recharge Requests</h3>
+                <div id="pending-recharges" class="grid gap-3 sm:grid-cols-2"></div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">💸 Pending Withdrawal Requests</h3>
+                <div id="pending-withdraws" class="grid gap-3 sm:grid-cols-2"></div>
+            </div>
+        </div>
+
+        <!-- ================= USER PANEL ================= -->
+        <div id="user-panel" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-4 border-[#2563eb] inline-block">Your Account</h2>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <div class="flex items-center gap-4 mb-5">
+                    <span class="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white text-xl font-bold shadow-md">👤</span>
+                    <div>
+                        <p id="username" class="text-gray-900 font-semibold text-lg"></p>
+                        <p id="email" class="text-gray-500 text-sm"></p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <div class="px-5 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Coins</p>
+                        <p id="wallet" class="text-2xl font-bold text-[#2563eb]">0</p>
+                    </div>
+                    <div class="px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Win Coins</p>
+                        <p id="win-wallet" class="text-2xl font-bold text-emerald-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- Operator ID Card ---- -->
+            <section class="operator-section">
+                <div class="section-kicker">IDENTITY // FIELD PROFILE</div>
+                <div class="operator-layout">
+                    <div class="operator-card-shell" id="operator-card">
+                        <div class="operator-card-inner">
+                            <article class="operator-face operator-front">
+                                <div class="operator-scanline"></div>
+                                <div class="operator-top"><span class="operator-brand">TV // OPERATOR</span><span class="operator-status">ONLINE</span></div>
+                                <div class="operator-main">
+                                    <div class="operator-avatar" id="operator-avatar">V</div>
+                                    <div class="operator-identity"><span class="operator-label">CALLSIGN</span><strong id="operator-name">OPERATOR</strong><span id="operator-rank" class="operator-rank">ROOKIE</span></div>
+                                </div>
+                                <div class="operator-stats">
+                                    <div><span>WINS</span><strong id="operator-wins">0</strong></div>
+                                    <div><span>MATCHES</span><strong id="operator-matches">0</strong></div>
+                                    <div><span>WIN RATE</span><strong id="operator-rate">0%</strong></div>
+                                </div>
+                                <div class="operator-progress"><div class="operator-progress-head"><span id="operator-next-label">NEXT RANK</span><span id="operator-xp">0 XP</span></div><div class="operator-progress-track"><span id="operator-progress-bar"></span></div></div>
+                                <div class="operator-footer"><span id="operator-uid">ID // --</span><span>TAP TO FLIP ↻</span></div>
+                            </article>
+                            <article class="operator-face operator-back">
+                                <div class="operator-scanline"></div>
+                                <div class="operator-top"><span class="operator-brand">SQUAD EMBLEM</span><span>PROFILE</span></div>
+                                <div class="emblem-grid" id="emblem-grid">
+                                    <button type="button" data-emblem="⚔️" aria-label="Warrior">⚔️</button><button type="button" data-emblem="🐺" aria-label="Lonewolf">🐺</button><button type="button" data-emblem="☠️" aria-label="Skull">☠️</button><button type="button" data-emblem="⚡" aria-label="Storm">⚡</button><button type="button" data-emblem="🔥" aria-label="Inferno">🔥</button><button type="button" data-emblem="🦅" aria-label="Falcon">🦅</button>
+                                </div>
+                                <div class="operator-emblem-preview" id="operator-emblem-preview">⚔️</div>
+                                <p class="operator-back-copy">Choose your squad mark. It is saved locally and never changes your wallet or match economy.</p>
+                                <button type="button" id="operator-flip-back" class="operator-action">RETURN TO ID CARD</button>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="operator-copy">
+                        <span class="operator-mini-tag">NO BONUS COINS // NO RNG</span>
+                        <h3>Build your operator identity.</h3>
+                        <p>Flip the card, choose a squad emblem, and track your rank progress. It is purely cosmetic, so your recharge and withdrawal economy stays untouched.</p>
+                        <button type="button" id="operator-flip" class="operator-action">VIEW PROFILE ↻</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---- Recharge ---- -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">⚡ Recharge</h3>
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                    <img src="payment-qr.jpg" alt="Payment QR code" class="w-48 h-48 object-contain rounded-xl border-2 border-gray-200 flex-shrink-0" />
+                    <div class="flex-1 w-full">
+                        <p class="text-sm text-gray-600 mb-4">Scan the QR code and pay, then enter the amount and the UTR / transaction reference number below. Your coins will be credited once an admin approves it.</p>
+                        <form id="recharge-form" class="space-y-4">
+                            <label class="block">
+                                <span class="block text-gray-900 font-semibold mb-2">Amount (coins, min 10)</span>
+                                <input name="amount" type="number" min="10" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:border-[#2563eb] focus:bg-white transition-all duration-300" />
+                            </label>
+                            <label class="block">
+                                <span class="block text-gray-900 font-semibold mb-2">UTR / Transaction ID</span>
+                                <input name="utr" type="text" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:border-[#2563eb] focus:bg-white transition-all duration-300" />
+                            </label>
+                            <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">Submit Recharge Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- Withdraw ---- -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">💸 Withdraw</h3>
+                <p class="text-sm text-gray-600 mb-4">Only <strong>win coins</strong> can be withdrawn (minimum 30), between 2:00 PM – 9:00 PM, and only when you're not currently in a match. Coins are deducted immediately; payout reaches your account in 4–5 hours.</p>
+                <form id="withdraw-form" class="space-y-4">
+                    <label class="block">
+                        <span class="block text-gray-900 font-semibold mb-2">Amount (win coins, min 30)</span>
+                        <input name="amount" type="number" min="30" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:border-[#2563eb] focus:bg-white transition-all duration-300" />
+                    </label>
+                    <label class="block">
+                        <span class="block text-gray-900 font-semibold mb-2">Your UPI ID</span>
+                        <input name="upi" type="text" required placeholder="e.g. yourname@upi" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:border-[#2563eb] focus:bg-white transition-all duration-300" />
+                    </label>
+                    <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">Submit Withdrawal Request</button>
+                </form>
+            </div>
+
+            <!-- ---- Wallet transactions ---- -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">📜 Wallet History</h3>
+                <div id="transaction-list" class="space-y-2"></div>
+            </div>
+
+            <!-- ---- Recharge history ---- -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">⚡ Recharge History</h3>
+                <div id="recharge-history" class="grid gap-3 sm:grid-cols-2"></div>
+            </div>
+
+            <!-- ---- Withdraw history ---- -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-7 shadow-md mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">💸 Withdrawal History</h3>
+                <div id="withdraw-history" class="grid gap-3 sm:grid-cols-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

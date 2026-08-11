@@ -1,0 +1,207 @@
+/* ==========================================================================
+   Lonewolf 1v1 — Shared design tokens & motion system (Auth pages)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root {
+    --ink-1: #050810;
+    --ink-2: #0a1428;
+    --ink-3: #0f2747;
+    --accent: #2563eb;
+    --accent-2: #38bdf8;
+    --accent-warm: #2563eb;
+    --accent-success: #10b981;
+    --accent-danger: #e11d2a;
+    --font-display: 'Rajdhani', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gridDrift {
+    from { background-position: 0 0, 0 0; }
+    to { background-position: 80px 80px, 80px 80px; }
+}
+
+@keyframes scanSweep {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(220%); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.0), 0 8px 24px rgba(15, 23, 42, 0.25); }
+    50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12), 0 8px 24px rgba(15, 23, 42, 0.25); }
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+body {
+    font-family: var(--font-body);
+    position: relative;
+    isolation: isolate;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(96, 165, 250, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96, 165, 250, 0.06) 1px, transparent 1px);
+    background-size: 42px 42px, 42px 42px;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(480px circle at 12% 15%, rgba(37, 99, 235, 0.16), transparent 60%),
+        radial-gradient(520px circle at 88% 85%, rgba(56, 189, 248, 0.16), transparent 60%);
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    body::before { animation: gridDrift 22s linear infinite; }
+    body { animation: fadeSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .login-container { animation: fadeSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ---- Card ------------------------------------------------------------- */
+.login-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .login-container::before { animation: scanSweep 3.4s ease-in-out infinite; }
+}
+
+/* ---- Messages ----------------------------------------------------------- */
+.message {
+    animation: fadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    min-height: 1.5rem;
+}
+
+.message.success {
+    color: #059669;
+    font-weight: 600;
+}
+
+.message.error {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ---- Focus & inputs ------------------------------------------------------ */
+input:focus {
+    outline: none;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ---- Buttons -------------------------------------------------------------- */
+button {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transform: translateX(-100%);
+    background: rgba(255, 255, 255, 0.15);
+    transition: transform 0.4s ease;
+    pointer-events: none;
+}
+
+button:hover::before {
+    transform: translateX(100%);
+}
+
+button[type="submit"] {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    button[type="submit"] { animation: glowPulse 2.6s ease-in-out infinite; }
+}
+
+/* ---- Link hover underline animation ---- */
+a {
+    position: relative;
+}
+
+a.forgot-password-link::after,
+a.register-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+a.forgot-password-link:hover::after,
+a.register-link:hover::after {
+    width: 100%;
+}
+
+.message{
+    margin-top:15px;
+    padding:10px;
+    border-radius:8px;
+    font-weight:bold;
+}
+
+.success{
+    background:#d4edda;
+    color:#155724;
+}
+
+.error{
+    background:#f8d7da;
+    color:#721c24;
+}

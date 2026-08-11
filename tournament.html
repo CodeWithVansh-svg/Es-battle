@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gradient-to-b from-[#050810] via-[#0a1428] to-[#0f2747] min-h-screen">
+    <div id="app-content" class="max-w-4xl mx-auto my-12 p-10 bg-white rounded-3xl shadow-2xl border border-gray-100">
+        <div class="flex items-center justify-between gap-5 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#2563eb] to-[#38bdf8] bg-clip-text text-transparent m-0">Tournament App</h1>
+            <div class="profile-card flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-gray-200 shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div class="profile-icon w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-xl shadow-lg">👤</div>
+                <div class="profile-info space-y-1">
+                    <span id="profile-name" class="block text-base font-bold text-gray-900">Guest</span>
+                    <span id="profile-coins" class="block text-sm font-semibold text-[#2563eb]">0 coins</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lonewolf 1v1 -->
+        <div class="game-card relative border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-lg hover:-translate-y-1 transition-all duration-300 my-8">
+            <div class="relative">
+                
+                <img src="assets/lonewolf-1v1.svg" alt="Lonewolf 1v1 custom arena artwork" class="game-art" loading="eager"/>
+                
+                <span class="absolute top-3 left-3 px-3 py-1 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white text-xs font-bold rounded-full shadow-lg">🔥 CUSTOM MATCH</span>
+            </div>
+            <div class="game-card-content p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Lonewolf 1v1</h2>
+                <p id="lonewolf-description" class="text-gray-600 text-sm mb-4">No description added yet.</p>
+                <div class="flex flex-wrap gap-3 mb-5">
+                    <span class="px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl text-sm text-gray-700">Entry Fee <strong class="block text-lg text-[#2563eb]">10 coins</strong></span>
+                    <span class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-sm text-gray-700">Prize <strong class="block text-lg text-[#e6a800]">🏆 15 coins</strong></span>
+                </div>
+                <div class="mb-5">
+                    <div class="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                        <span>Slots Filled</span>
+                        <span id="lonewolf-progress-label">0 / 2</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div id="lonewolf-progress-bar" class="h-full bg-gradient-to-r from-[#2563eb] to-[#38bdf8] rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <button id="lonewolf-join-button" type="button" class="w-full px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">⚔️ Join Lonewolf 1v1</button>
+                    <p id="lonewolf-join-deadline-display" class="hidden text-amber-800 text-center font-medium p-3 bg-amber-50 border border-amber-200 rounded-lg"></p>
+                    <p id="lonewolf-match-status" class="text-gray-700 text-center font-medium p-3 bg-gray-50 rounded-lg"></p>
+                    <p id="lonewolf-join-message" class="text-gray-900 font-semibold p-3 bg-blue-50 rounded-lg border border-blue-200 text-center"></p>
+                    <p id="lonewolf-room-name-display" class="font-semibold text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-600 p-4 rounded-lg fade-in"></p>
+                    <p id="lonewolf-room-pass-display" class="font-semibold text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-600 p-4 rounded-lg fade-in"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CS Custom 1v1 -->
+        <div class="game-card relative border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-lg hover:-translate-y-1 transition-all duration-300 my-8">
+            <div class="relative h-48 bg-gradient-to-br from-[#1a2f14] via-[#2b4a1f] to-[#3f6b2a] flex items-center justify-center">
+                <img src="assets/cs-1v1.svg" alt="CS 1v1 custom arena artwork" class="game-art" loading="eager"/>
+                <span class="absolute top-3 left-3 px-3 py-1 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white text-xs font-bold rounded-full shadow-lg">🔥 CUSTOM MATCH</span>
+            </div>
+            <div class="game-card-content p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">CS Custom 1v1</h2>
+                <p id="cs1v1-description" class="text-gray-600 text-sm mb-4">No description added yet.</p>
+                <div class="flex flex-wrap gap-3 mb-5">
+                    <span class="px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl text-sm text-gray-700">Entry Fee <strong class="block text-lg text-[#2563eb]">10 coins</strong></span>
+                    <span class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-sm text-gray-700">Prize <strong class="block text-lg text-[#e6a800]">🏆 15 coins</strong></span>
+                </div>
+                <div class="mb-5">
+                    <div class="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                        <span>Slots Filled</span>
+                        <span id="cs1v1-progress-label">0 / 2</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div id="cs1v1-progress-bar" class="h-full bg-gradient-to-r from-[#2563eb] to-[#38bdf8] rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <button id="cs1v1-join-button" type="button" class="w-full px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">⚔️ Join CS Custom 1v1</button>
+                    <p id="cs1v1-join-deadline-display" class="hidden text-amber-800 text-center font-medium p-3 bg-amber-50 border border-amber-200 rounded-lg"></p>
+                    <p id="cs1v1-match-status" class="text-gray-700 text-center font-medium p-3 bg-gray-50 rounded-lg"></p>
+                    <p id="cs1v1-join-message" class="text-gray-900 font-semibold p-3 bg-blue-50 rounded-lg border border-blue-200 text-center"></p>
+                    <p id="cs1v1-room-name-display" class="font-semibold text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-600 p-4 rounded-lg fade-in"></p>
+                    <p id="cs1v1-room-pass-display" class="font-semibold text-green-700 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-600 p-4 rounded-lg fade-in"></p>
+                </div>
+            </div>
+        </div>
+
+        <a href="index.html" class="inline-block px-6 py-3 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300 transition-all duration-300 border-b-2 border-[#2563eb] hover:border-b-4">← Back to Dashboard</a>
+
+        <script type="module">
+            import {
+                isRemoteApiAvailable,
+                apiJoinMatch,
+                apiMatchStatus,
+                getToken
+            } from './js/api-client.js';
+
+            (async function () {
+                const remoteMode = await isRemoteApiAvailable();
+
+                function loadUsers() {
+                    try {
+                        const savedUsers = JSON.parse(localStorage.getItem('login-users-db') || '[]');
+                        return Array.isArray(savedUsers) ? savedUsers : [];
+                    } catch (error) {
+                        return [];
+                    }
+                }
+
+                function saveUsers(users) {
+                    localStorage.setItem('login-users-db', JSON.stringify(users));
+                }
+
+                function getCurrentUser() {
+                    try {
+                        return JSON.parse(localStorage.getItem('logged-in-user') || 'null');
+                    } catch (error) {
+                        return null;
+                    }
+                }
+
+                const profileName = document.getElementById('profile-name');
+                const profileCoins = document.getElementById('profile-coins');
+
+                function refreshProfile() {
+                    const currentUser = getCurrentUser();
+                    const users = loadUsers();
+                    const currentUserEntry = currentUser ? users.find((entry) => entry.email === currentUser.email) : null;
+                    if (profileName) {
+                        profileName.textContent = currentUserEntry ? currentUserEntry.username : 'Guest';
+                    }
+                    if (profileCoins) {
+                        profileCoins.textContent = currentUserEntry ? `${currentUserEntry.coins ?? 0} coins` : '0 coins';
+                    }
+                }
+
+                function setupMatch(matchId, displayName) {
+                    const joinButton = document.getElementById(`${matchId}-join-button`);
+                    const matchStatus = document.getElementById(`${matchId}-match-status`);
+                    const joinMessage = document.getElementById(`${matchId}-join-message`);
+                    const roomNameDisplay = document.getElementById(`${matchId}-room-name-display`);
+                    const roomPassDisplay = document.getElementById(`${matchId}-room-pass-display`);
+                    const joinDeadlineDisplay = document.getElementById(`${matchId}-join-deadline-display`);
+                    const descriptionDisplay = document.getElementById(`${matchId}-description`);
+                    const progressBar = document.getElementById(`${matchId}-progress-bar`);
+                    const progressLabel = document.getElementById(`${matchId}-progress-label`);
+
+                    function getMatchState(user) {
+                        if (user.matches && user.matches[matchId]) {
+                            return user.matches[matchId];
+                        }
+                        if (matchId === 'lonewolf' && user.participated) {
+                            return { participated: true, roomName: user.roomName || '', roomPassword: user.roomPassword || '' };
+                        }
+                        return { participated: false, roomName: '', roomPassword: '' };
+                    }
+
+                    function setMatchState(user, state) {
+                        if (!user.matches) {
+                            user.matches = {};
+                        }
+                        user.matches[matchId] = state;
+                        if (matchId === 'lonewolf') {
+                            user.participated = state.participated;
+                            user.roomName = state.roomName;
+                            user.roomPassword = state.roomPassword;
+                        }
+                    }
+
+                    function getJoinedPlayers(users) {
+                        return users.filter((entry) => getMatchState(entry).participated);
+                    }
+
+                    function getStoredDeadlineTime() {
+                        const value = localStorage.getItem(`${matchId}-room-deadline`);
+                        if (!value) {
+                            return null;
+                        }
+                        const parts = value.split(':');
+                        const hours = Number(parts[0]);
+                        const minutes = Number(parts[1]);
+                        if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+                            return null;
+                        }
+                        return { hours, minutes };
+                    }
+
+                    function formatDeadline(timeObj) {
+                        const period = timeObj.hours >= 12 ? 'PM' : 'AM';
+                        const displayHours = (timeObj.hours % 12) || 12;
+                        return `${displayHours}:${String(timeObj.minutes).padStart(2, '0')} ${period}`;
+                    }
+
+                    function getDeadlineDateForToday(timeObj) {
+                        const now = new Date();
+                        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeObj.hours, timeObj.minutes, 0, 0);
+                    }
+
+                    function isDeadlinePassed(timeObj) {
+                        if (!timeObj) {
+                            return false;
+                        }
+                        return Date.now() > getDeadlineDateForToday(timeObj).getTime();
+                    }
+
+                    function getTimingMode() {
+                        return localStorage.getItem(`${matchId}-timing-mode`) || (getStoredDeadlineTime() ? 'before' : 'open');
+                    }
+
+                    function isRoomRevealed(timeObj) {
+                        const mode = getTimingMode();
+                        if (mode === 'open' || !timeObj) {
+                            return true;
+                        }
+                        const target = getDeadlineDateForToday(timeObj).getTime();
+                        if (mode === 'at') {
+                            // Room details unlock at the configured time
+                            return Date.now() >= target;
+                        }
+                        // "before" mode: reveal 5 minutes before join deadline
+                        return Date.now() >= (target - 5 * 60 * 1000);
+                    }
+
+                    function isJoinClosed(timeObj) {
+                        const mode = getTimingMode();
+                        // Only "before" closes the join window at the deadline.
+                        // "at" and "open" allow joining any time (until slots fill).
+                        if (mode !== 'before' || !timeObj) {
+                            return false;
+                        }
+                        return isDeadlinePassed(timeObj);
+                    }
+
+                    function updateDescription() {
+                        if (!descriptionDisplay) {
+                            return;
+                        }
+                        const text = (localStorage.getItem(`${matchId}-description`) || '').trim();
+                        descriptionDisplay.textContent = text || 'No description added yet.';
+                    }
+
+                    function updateDeadlineDisplay() {
+                        if (!joinDeadlineDisplay) {
+                            return;
+                        }
+                        const deadline = getStoredDeadlineTime();
+                        const mode = getTimingMode();
+                        if (!deadline || mode === 'open') {
+                            joinDeadlineDisplay.classList.add('hidden');
+                            joinDeadlineDisplay.textContent = '';
+                            return;
+                        }
+                        joinDeadlineDisplay.classList.remove('hidden');
+                        if (mode === 'at') {
+                            joinDeadlineDisplay.textContent = Date.now() >= getDeadlineDateForToday(deadline).getTime()
+                                ? `Room is available now (from ${formatDeadline(deadline)}).`
+                                : `Room available at: ${formatDeadline(deadline)}`;
+                            return;
+                        }
+                        // before
+                        joinDeadlineDisplay.textContent = isDeadlinePassed(deadline)
+                            ? `Join window closed for today (was ${formatDeadline(deadline)}).`
+                            : `Join before: ${formatDeadline(deadline)}`;
+                    }
+
+                    function updateMatchStatus() {
+                        const deadline = getStoredDeadlineTime();
+                        const joinClosed = isJoinClosed(deadline);
+                        const joinedPlayers = getJoinedPlayers(loadUsers());
+                        const playerCount = joinedPlayers.length;
+                        if (!matchStatus) {
+                            return;
+                        }
+
+                        if (progressBar) {
+                            progressBar.style.width = `${Math.min(playerCount, 2) / 2 * 100}%`;
+                        }
+                        if (progressLabel) {
+                            progressLabel.textContent = `${playerCount} / 2`;
+                        }
+
+                        if (joinClosed) {
+                            matchStatus.textContent = 'The join window for today has closed.';
+                            if (joinButton) {
+                                joinButton.disabled = true;
+                            }
+                        } else if (playerCount >= 2) {
+                            matchStatus.textContent = 'Match full — 2 players have already joined.';
+                            if (joinButton) {
+                                joinButton.disabled = true;
+                            }
+                        } else {
+                            matchStatus.textContent = `${playerCount} / 2 players joined.`;
+                            if (joinButton) {
+                                joinButton.disabled = false;
+                            }
+                        }
+                    }
+
+                    function showRoomInfoForUser(user) {
+                        if (!roomNameDisplay || !roomPassDisplay) {
+                            return;
+                        }
+                        const state = user ? getMatchState(user) : { participated: false };
+                        if (!user || !state.participated) {
+                            roomNameDisplay.textContent = '';
+                            roomPassDisplay.textContent = '';
+                            return;
+                        }
+                        const deadline = getStoredDeadlineTime();
+                        if (deadline && !isRoomRevealed(deadline)) {
+                            const mode = getTimingMode();
+                            const deadlineDate = getDeadlineDateForToday(deadline);
+                            const revealDate = mode === 'at'
+                                ? deadlineDate
+                                : new Date(deadlineDate.getTime() - 5 * 60 * 1000);
+                            const revealTimeStr = revealDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                            roomNameDisplay.textContent = mode === 'at'
+                                ? `Room ID & password will be revealed at ${revealTimeStr}.`
+                                : `Room ID & password will be revealed at ${revealTimeStr} (5 minutes before the match).`;
+                            roomPassDisplay.textContent = '';
+                            return;
+                        }
+                        roomNameDisplay.textContent = `Room Name: ${state.roomName || localStorage.getItem(`${matchId}-room-name`) || 'Not available'}`;
+                        roomPassDisplay.textContent = `Room Password: ${state.roomPassword || localStorage.getItem(`${matchId}-room-password`) || 'Not available'}`;
+                    }
+
+                    joinButton?.addEventListener('click', async () => {
+                        const currentUser = getCurrentUser();
+                        if (!currentUser) {
+                            joinMessage.textContent = 'Please log in first on the dashboard.';
+                            return;
+                        }
+
+                        if (remoteMode) {
+                            if (!getToken()) {
+                                joinMessage.textContent = 'Please log in again so the server can verify your account.';
+                                return;
+                            }
+                            try {
+                                joinMessage.textContent = 'Joining...';
+                                const data = await apiJoinMatch(matchId);
+                                joinMessage.textContent = data.alreadyJoined
+                                    ? 'You are already joined in the match.'
+                                    : `Joined ${displayName}! Room details below.`;
+                                if (roomNameDisplay) roomNameDisplay.textContent = `Room Name: ${data.roomName || ''}`;
+                                if (roomPassDisplay) roomPassDisplay.textContent = `Room Password: ${data.roomPassword || ''}`;
+                                refreshProfile();
+                                const st = await apiMatchStatus(matchId);
+                                if (progressLabel) progressLabel.textContent = `${st.playerCount} / 2`;
+                                if (progressBar) progressBar.style.width = `${Math.min(st.playerCount, 2) / 2 * 100}%`;
+                                if (matchStatus) matchStatus.textContent = st.playerCount >= 2
+                                    ? 'Match full — 2 players have already joined.'
+                                    : `${st.playerCount} / 2 players joined.`;
+                            } catch (error) {
+                                joinMessage.textContent = error.message || 'Could not join match.';
+                            }
+                            return;
+                        }
+
+                        const users = loadUsers();
+                        const user = users.find((entry) => entry.email === currentUser.email);
+                        const storedRoomName = localStorage.getItem(`${matchId}-room-name`) || '';
+                        const storedRoomPass = localStorage.getItem(`${matchId}-room-password`) || '';
+                        const joinedPlayers = getJoinedPlayers(users);
+                        const playerCount = joinedPlayers.length;
+
+                        if (!user) {
+                            joinMessage.textContent = 'Unable to find your account.';
+                            return;
+                        }
+                        const deadline = getStoredDeadlineTime();
+                        if (isJoinClosed(deadline)) {
+                            joinMessage.textContent = `The join window closed for today at ${formatDeadline(deadline)}.`;
+                            updateMatchStatus();
+                            return;
+                        }
+                        if (!storedRoomName || !storedRoomPass) {
+                            joinMessage.textContent = 'Room is not configured yet. Ask admin to save room settings first.';
+                            return;
+                        }
+                        if (playerCount >= 2) {
+                            joinMessage.textContent = 'Match full — players have already joined the match.';
+                            if (matchStatus) {
+                                matchStatus.textContent = 'Match full — 2 players have already joined.';
+                            }
+                            return;
+                        }
+                        if ((user.coins ?? 0) < 10) {
+                            joinMessage.textContent = `Not enough coins to join ${displayName}.`;
+                            return;
+                        }
+                        if (getMatchState(user).participated) {
+                            joinMessage.textContent = 'You are already joined in the match.';
+                            return;
+                        }
+
+                        user.coins = (user.coins ?? 0) - 10;
+                        setMatchState(user, { participated: true, roomName: storedRoomName, roomPassword: storedRoomPass });
+                        saveUsers(users);
+
+                        joinMessage.textContent = `Joined ${displayName}! Room ID & password will appear below once revealed.`;
+                        showRoomInfoForUser(user);
+                        updateMatchStatus();
+                    });
+
+                    function refresh() {
+                        const currentUser = getCurrentUser();
+                        const users = loadUsers();
+                        const currentUserEntry = currentUser ? users.find((entry) => entry.email === currentUser.email) : null;
+                        updateDescription();
+                        updateDeadlineDisplay();
+                        updateMatchStatus();
+                        showRoomInfoForUser(currentUserEntry);
+                    }
+
+                    return refresh;
+                }
+
+                const refreshLonewolf = setupMatch('lonewolf', 'Lonewolf 1v1');
+                const refreshCs = setupMatch('cs1v1', 'CS Custom 1v1');
+
+                function tick() {
+                    refreshProfile();
+                    refreshLonewolf();
+                    refreshCs();
+                }
+
+                tick();
+                setInterval(tick, 1000);
+            })();
+        </script>
+    </div>
+</body>
+
+</html>
