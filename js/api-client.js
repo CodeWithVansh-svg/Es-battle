@@ -154,6 +154,12 @@ export async function apiSaveRoom(matchId, payload) {
   });
 }
 
+export async function apiResetRoom(matchId) {
+  return request(`/api/rooms?matchId=${encodeURIComponent(matchId)}`, {
+    method: "DELETE",
+  });
+}
+
 export async function apiJoinMatch(matchId) {
   return request("/api/matches/join", {
     method: "POST",
