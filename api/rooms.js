@@ -66,6 +66,26 @@ export default async function handler(req, res) {
       return json(res, 200, { success: true });
     }
 
+    if (req.method === "DELETE") {
+      await requireAdmin(req);
+
+      // A room reset means the match cycle is over — free up both slots
+      // so the next round can be joined from scratch.
+      await sql`DELETE FROM match_joins WHERE match_id = ${matchId}`;
+      await sql`
+        UPDATE match_rooms SET
+          room_name = '',
+          room_password = '',
+          description = '',
+          timing_mode = 'open',
+          deadline = NULL,
+          updated_at = NOW()
+        WHERE match_id = ${matchId}
+      `;
+
+      return json(res, 200, { success: true });
+    }
+
     return json(res, 405, { error: "Method not allowed" });
   } catch (error) {
     console.error(error);
