@@ -15,9 +15,7 @@ import {
     rejectRechargeRequest,
     approveWithdrawRequest,
     rejectWithdrawRequest,
-    getRooms,
-    createRoom,
-    deleteRoom
+    createRoom
 } from "./js/local-db.js";
 
 import { showToast as pushToast } from "./js/toast.js";
@@ -32,6 +30,7 @@ import {
     apiCreateRecharge,
     apiCreateWithdraw,
     apiSaveRoom,
+    apiResetRoom,
     apiGetRoom,
     apiMe,
     getToken,
@@ -155,10 +154,13 @@ function showToast(message, type = "info") {
 
 async function checkAuthentication() {
 
-    const authenticated =
+    const hasToken =
+        !!getToken();
+
+    const hasLocalSession =
         await requireAuth();
 
-    if (!authenticated) {
+    if (!hasToken && !hasLocalSession) {
 
         window.location.href =
             "login.html";
@@ -177,8 +179,62 @@ async function checkAuthentication() {
 
 async function loadCurrentProfile() {
 
-    currentProfile =
-        await loadProfile();
+    const token =
+        getToken();
+
+    if (token) {
+
+        // A token means this account lives on the shared server (Neon) —
+        // not in localStorage. The old code only ever checked local-db here,
+        // so a freshly-registered remote account had no local profile to find
+        // and bounced straight back to login.html, which then bounced back
+        // to index.html because the session token was still set — an
+        // infinite redirect loop with a blank page in between.
+        try {
+
+            const data =
+                await apiMe();
+
+            currentProfile =
+                data.user;
+
+            remoteMode = true;
+
+        } catch (error) {
+
+            if (error.status === 401 || error.status === 403 || error.status === 404) {
+
+                // Token expired/invalid, or the account was banned/removed —
+                // clear everything and force a clean re-login instead of looping.
+                apiLogout();
+
+                await logout();
+
+                window.location.href =
+                    "login.html";
+
+                return;
+
+            }
+
+            // Server unreachable for some other reason (offline, cold start, etc.)
+            // — fall back to whatever local profile we might have.
+            console.warn(
+                "Could not reach server for profile, falling back to local:",
+                error.message
+            );
+
+            currentProfile =
+                await loadProfile();
+
+        }
+
+    } else {
+
+        currentProfile =
+            await loadProfile();
+
+    }
 
     if (!currentProfile) {
 
@@ -1352,6 +1408,20 @@ function clearMatchAdmin(matchId, label) {
     if (modeEl) modeEl.value = "open";
     if (timeEl) timeEl.value = "";
 
+    if (remoteMode) {
+        // Clears the server-side room AND removes both joined players so their
+        // slot is freed for the next round — this used to only clear the
+        // local form fields and left old participants "stuck" as filled slots.
+        apiResetRoom(matchId).then(() => {
+            loadMatchAdminForm(matchId);
+            showToast(`${label} room reset — joined players cleared.`, "success");
+        }).catch((error) => {
+            showToast(error.message || "Reset failed on server.", "error");
+            loadMatchAdminForm(matchId);
+        });
+        return;
+    }
+
     loadMatchAdminForm(matchId);
     showToast(`${label} room cleared.`, "success");
 }
@@ -1414,7 +1484,9 @@ async function init() {
     bindRechargeButton();
     bindWithdrawButton();
 
-    remoteMode = await isRemoteApiAvailable();
+    if (!remoteMode) {
+        remoteMode = await isRemoteApiAvailable();
+    }
     if (remoteMode) {
         showToast("Connected to shared server — data syncs across devices.", "success", 3200);
     }
