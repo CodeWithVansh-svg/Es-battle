@@ -103,6 +103,13 @@ export async function apiMe() {
   return request("/api/auth/me");
 }
 
+export async function apiGrantWinCoins(email, amount, note = "") {
+  return request("/api/admin/users", {
+    method: "PATCH",
+    body: { email, amount, note },
+  });
+}
+
 export async function apiAdminUsers() {
   return request("/api/admin/users");
 }
