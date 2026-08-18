@@ -23,6 +23,7 @@ import { showToast as pushToast } from "./js/toast.js";
 import {
     isRemoteApiAvailable,
     apiAdminUsers,
+    apiGrantWinCoins,
     apiAdminRecharges,
     apiAdminWithdraws,
     apiPatchRecharge,
@@ -140,12 +141,9 @@ function animateNumber(el, toValue) {
                         TOAST
 ========================================================== */
 
-function showToast(message, type = "info") {
-
+function showToast(message, type = "info", duration = 4000) {
     console.log(`[${type}] ${message}`);
-
-    pushToast(message, type);
-
+    pushToast(message, type, duration);
 }
 
 /* ==========================================================
@@ -473,7 +471,7 @@ async function submitRecharge(
     if (!numericAmount || numericAmount < 10) {
 
         showToast(
-            "Minimum recharge is 10 coins",
+            "Minimum recharge 10 coins hona chahiye.",
             "error"
         );
 
@@ -499,7 +497,7 @@ async function submitRecharge(
     }
 
     showToast(
-        "Recharge request submitted.",
+        "Recharge request submit ho gaya.",
         "success"
     );
 
@@ -525,7 +523,7 @@ async function submitWithdraw(
     if (!numericAmount || numericAmount < 30) {
 
         showToast(
-            "Minimum withdrawal is 30 coins",
+            "Minimum withdrawal 30 win coins hona chahiye.",
             "error"
         );
 
@@ -537,7 +535,7 @@ async function submitWithdraw(
     if (numericAmount > winCoins) {
 
         showToast(
-            "You don't have enough win coins for this withdrawal",
+            "Is withdrawal ke liye win coins kam hain.",
             "error"
         );
 
@@ -565,7 +563,7 @@ async function submitWithdraw(
     }
 
     showToast(
-        "Withdrawal requested. Coins deducted — it will reach your bank account in 4-5 hours.",
+        "Withdrawal request aa gaya. Coins kat gaye — 4–5 hours mein account mein aayenge.",
         "success"
     );
 
@@ -846,7 +844,7 @@ async function loadUsers() {
             renderUsers();
             return;
         } catch (error) {
-            showToast(error.message || "Could not load users from server.", "error");
+            showToast(error.message || "Server se users load nahi ho paye.", "error");
         }
     }
 
@@ -893,11 +891,13 @@ function renderUsers() {
         div.className =
             "admin-user-card";
 
+        const safeEmail = escapeHtml(user.email);
+
         div.innerHTML = `
 
             <h3>${escapeHtml(user.username)}${user.is_banned ? " 🚫" : ""}</h3>
 
-            <p>${escapeHtml(user.email)}</p>
+            <p>${safeEmail}</p>
 
             <p>FF UID :
             ${escapeHtml(user.ff_uid || "Not linked")}</p>
@@ -909,7 +909,7 @@ function renderUsers() {
             ${Number(user.coins) || 0}</p>
 
             <p>Win Coins :
-            ${Number(user.win_coins) || 0}</p>
+            <strong class="win-coins-val">${Number(user.win_coins) || 0}</strong></p>
 
             <p>Matches :
             ${Number(user.matches_played) || 0} played /
@@ -918,12 +918,77 @@ function renderUsers() {
             <p>Role :
             ${escapeHtml(user.role || "user")}</p>
 
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-xs font-semibold text-amber-700 mb-2">Sirf admin — win coins do (fixed 15)</p>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="number" min="15" max="15" value="15" readonly
+                        class="grant-win-amount w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm bg-gray-50 font-bold text-center"
+                        data-email="${safeEmail}" />
+                    <button type="button"
+                        class="grant-win-btn px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow">
+                        +15 Win coins
+                    </button>
+                </div>
+            </div>
+
         `;
+
+        const btn = div.querySelector(".grant-win-btn");
+        const input = div.querySelector(".grant-win-amount");
+        btn?.addEventListener("click", () => {
+            const amount = 15;
+            grantWinCoinsToUser(user.email, amount, user.username);
+        });
 
         container.appendChild(div);
 
     });
 
+}
+
+/** Admin-only: add win coins to a user (server or local). */
+async function grantWinCoinsToUser(email, amount, username) {
+    if (!isAdmin()) {
+        showToast("Sirf admin hi win coins de sakta hai.", "error");
+        return;
+    }
+
+    if (remoteMode) {
+        try {
+            const data = await apiGrantWinCoins(email, amount, `Admin grant to ${username || email}`);
+            showToast(
+                `${data.username || email} ko 15 win coins mil gaye. Naya balance: ${data.win_coins}.`,
+                "success"
+            );
+            await loadUsers();
+        } catch (error) {
+            showToast(error.message || "Win coins grant fail ho gaya.", "error");
+        }
+        return;
+    }
+
+    // Local mode
+    const profiles = getAllProfiles();
+    const user = profiles.find((p) => (p.email || "").toLowerCase() === (email || "").toLowerCase());
+    if (!user) {
+        showToast("Is device par user nahi mila.", "error");
+        return;
+    }
+    // local-db stores winCoins on the raw login-users-db shape via getAllProfiles normalize
+    try {
+        const raw = JSON.parse(localStorage.getItem("login-users-db") || "[]");
+        const idx = raw.findIndex((u) => (u.email || "").toLowerCase() === email.toLowerCase());
+        if (idx < 0) {
+            showToast("User nahi mila.", "error");
+            return;
+        }
+        raw[idx].winCoins = (Number(raw[idx].winCoins) || 0) + amount;
+        localStorage.setItem("login-users-db", JSON.stringify(raw));
+        showToast(`${username || email} ko 15 win coins mil gaye.`, "success");
+        await loadUsers();
+    } catch (e) {
+        showToast("Local user update nahi ho paya.", "error");
+    }
 }
 
 /* ==========================================================
@@ -945,7 +1010,7 @@ async function loadPendingRecharges() {
             renderPendingRecharges();
             return;
         } catch (error) {
-            showToast(error.message || "Could not load recharges.", "error");
+            showToast(error.message || "Recharges load nahi ho paye.", "error");
         }
     }
 
@@ -975,7 +1040,7 @@ async function loadPendingWithdraws() {
             renderPendingWithdraws();
             return;
         } catch (error) {
-            showToast(error.message || "Could not load withdrawals.", "error");
+            showToast(error.message || "Withdrawals load nahi ho paye.", "error");
         }
     }
 
@@ -1231,7 +1296,7 @@ async function approveRecharge(id) {
         showToast(error.message, "error");
         return;
     }
-    showToast("Recharge approved.", "success");
+    showToast("Recharge approve ho gaya.", "success");
     await loadPendingRecharges();
     await loadUsers();
 }
@@ -1249,7 +1314,7 @@ async function rejectRecharge(id) {
         showToast(error.message, "error");
         return;
     }
-    showToast("Recharge rejected.", "success");
+    showToast("Recharge reject ho gaya.", "success");
     await loadPendingRecharges();
 }
 
@@ -1262,7 +1327,7 @@ async function approveWithdraw(id) {
         showToast(error.message, "error");
         return;
     }
-    showToast("Withdrawal marked as paid.", "success");
+    showToast("Withdrawal paid mark ho gaya.", "success");
     await loadPendingWithdraws();
 }
 
@@ -1279,7 +1344,7 @@ async function rejectWithdraw(id) {
         showToast(error.message, "error");
         return;
     }
-    showToast("Withdrawal rejected and coins refunded.", "success");
+    showToast("Withdrawal reject ho gaya, coins wapas mil gaye.", "success");
     await loadPendingWithdraws();
     await loadUsers();
 }
@@ -1324,13 +1389,13 @@ function applyMatchAdminFormValues(matchId, data) {
     if (statusEl) {
         const hasRoom = !!(name && password);
         if (!hasRoom) {
-            statusEl.textContent = "Not configured yet.";
+            statusEl.textContent = "Abhi room set nahi hua hai.";
         } else if (mode === "open") {
-            statusEl.textContent = "Saved · Join anytime · Room reveals after join.";
+            statusEl.textContent = "Save ho gaya · Kabhi bhi join kar sakte ho · Room join ke baad dikhega.";
         } else if (mode === "before") {
-            statusEl.textContent = `Saved · Join before ${formatTimeLabel(time) || "—"} · Room reveals 5 min before that time.`;
+            statusEl.textContent = `Save ho gaya · ${formatTimeLabel(time) || "—"} se pehle join karo · Room usse 5 min pehle dikhega.`;
         } else if (mode === "at") {
-            statusEl.textContent = `Saved · Room available at ${formatTimeLabel(time) || "—"} · Join allowed earlier; details unlock at that time.`;
+            statusEl.textContent = `Save ho gaya · Room ${formatTimeLabel(time) || "—"} par available · Pehle join allowed; details us time pe khulenge.`;
         } else {
             statusEl.textContent = "Saved.";
         }
@@ -1388,15 +1453,15 @@ function saveMatchAdmin(matchId, label) {
     const time = document.getElementById(`${matchId}-timing-time`)?.value || "";
 
     if (!name) {
-        showToast("Room name is required.", "error");
+        showToast("Room name zaroori hai.", "error");
         return;
     }
     if (!password) {
-        showToast("Room password is required.", "error");
+        showToast("Room password zaroori hai.", "error");
         return;
     }
     if ((mode === "before" || mode === "at") && !time) {
-        showToast("Please set a time for this timing mode.", "error");
+        showToast("Is timing mode ke liye time set karo.", "error");
         return;
     }
 
@@ -1420,9 +1485,9 @@ function saveMatchAdmin(matchId, label) {
             deadline: mode === "open" ? null : time
         }).then(() => {
             loadMatchAdminForm(matchId);
-            showToast(`${label} room saved to server.`, "success");
+            showToast(`${label} room server par save ho gaya.`, "success");
         }).catch((error) => {
-            showToast(error.message || "Saved locally; server sync failed.", "error");
+            showToast(error.message || "Local save ho gaya; server sync fail hua.", "error");
             loadMatchAdminForm(matchId);
         });
         return;
@@ -1433,7 +1498,7 @@ function saveMatchAdmin(matchId, label) {
     } catch (_) { /* ignore */ }
 
     loadMatchAdminForm(matchId);
-    showToast(`${label} room saved.`, "success");
+    showToast(`${label} room save ho gaya.`, "success");
 }
 
 function clearMatchAdmin(matchId, label) {
@@ -1460,16 +1525,16 @@ function clearMatchAdmin(matchId, label) {
         // local form fields and left old participants "stuck" as filled slots.
         apiResetRoom(matchId).then(() => {
             loadMatchAdminForm(matchId);
-            showToast(`${label} room reset — joined players cleared.`, "success");
+            showToast(`${label} room reset ho gaya — joined players clear.`, "success");
         }).catch((error) => {
-            showToast(error.message || "Reset failed on server.", "error");
+            showToast(error.message || "Server par reset fail ho gaya.", "error");
             loadMatchAdminForm(matchId);
         });
         return;
     }
 
     loadMatchAdminForm(matchId);
-    showToast(`${label} room cleared.`, "success");
+    showToast(`${label} room clear ho gaya.`, "success");
 }
 
 function initAdminRooms() {
@@ -1534,7 +1599,7 @@ async function init() {
         remoteMode = await isRemoteApiAvailable();
     }
     if (remoteMode) {
-        showToast("Connected to shared server — data syncs across devices.", "success", 3200);
+        showToast("Shared server se connect ho gaya — data devices par sync hoga.", "success", 3200);
     }
 
     if (isAdmin()) {
