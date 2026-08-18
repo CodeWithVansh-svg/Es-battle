@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaderboard</title>
+    <title>Leaderboard — ES Battle</title>
+    <meta name="description" content="See top players on ES Battle leaderboard for Lonewolf and CS 1v1 tournaments.">
+    <meta name="theme-color" content="#0a1428">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +17,7 @@
             <a href="index.html" class="px-6 py-3 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300 transition-all duration-300 border-b-2 border-[#2563eb] hover:border-b-4">← Back to Dashboard</a>
         </div>
 
-        <p class="text-gray-600 text-sm mb-6">Ranked by win coins earned. Ties are broken by matches won.</p>
+        <p class="text-gray-600 text-sm mb-6">Ranked by win coins earned. Updates instantly after a match result is submitted.</p>
 
         <div id="leaderboard-list" class="space-y-3"></div>
         <p id="leaderboard-empty" class="hidden text-gray-500 text-center py-10">No players yet — be the first to win coins!</p>
@@ -22,43 +25,66 @@
 
     <script type="module">
         import { getLeaderboard } from './js/local-db.js';
+        import { isRemoteApiAvailable, apiGetLeaderboard } from './js/api-client.js';
 
         const MEDALS = ['🥇', '🥈', '🥉'];
+        let remoteMode = false;
+        let lastPing = localStorage.getItem('es-battle-leaderboard-ping') || '';
 
-        function render() {
+        function renderEntries(entries) {
             const list = document.getElementById('leaderboard-list');
             const empty = document.getElementById('leaderboard-empty');
-            const entries = getLeaderboard(20);
-
             list.innerHTML = '';
 
-            if (entries.length === 0) {
+            if (!entries || entries.length === 0) {
                 empty.classList.remove('hidden');
                 return;
             }
-
             empty.classList.add('hidden');
 
             entries.forEach((entry, index) => {
                 const rank = index + 1;
                 const row = document.createElement('div');
                 row.className = `leaderboard-row leaderboard-row--${rank}`;
-
+                const uid = entry.ffUid ? `<span class="text-xs text-gray-400 font-mono ml-2">UID ${entry.ffUid}</span>` : '';
                 row.innerHTML = `
                     <div class="leaderboard-rank">${MEDALS[index] || rank}</div>
-                    <div class="leaderboard-name">${entry.username}</div>
+                    <div class="leaderboard-name">${entry.username || 'Player'}${uid}</div>
                     <div class="leaderboard-stats">
-                        🏆 ${entry.winCoins} win coins
+                        🏆 ${entry.winCoins ?? 0} win coins
                         <br>
-                        ${entry.matchesWon} won / ${entry.matchesPlayed} played
+                        ${entry.matchesWon ?? 0} won / ${entry.matchesPlayed ?? 0} played
                     </div>
                 `;
-
                 list.appendChild(row);
             });
         }
 
-        render();
+        async function render() {
+            if (remoteMode) {
+                try {
+                    const data = await apiGetLeaderboard(20);
+                    renderEntries(data.entries || []);
+                    return;
+                } catch (_) { /* fall back */ }
+            }
+            renderEntries(getLeaderboard(20));
+        }
+
+        (async function init() {
+            remoteMode = await isRemoteApiAvailable();
+            await render();
+            // Poll for instant updates after match results
+            setInterval(async () => {
+                const ping = localStorage.getItem('es-battle-leaderboard-ping') || '';
+                if (ping !== lastPing) {
+                    lastPing = ping;
+                    await render();
+                } else if (remoteMode) {
+                    await render();
+                }
+            }, 4000);
+        })();
     </script>
 </body>
 </html>
