@@ -265,87 +265,237 @@ button:hover::before {
     transform: translateX(4px);
 }
 /* ==========================================================================
-   Toast notifications (HUD-style)
+   Toast notifications — GPU-friendly animations
    ========================================================================== */
 #toast-stack {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    z-index: 99999;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: min(360px, calc(100vw - 40px));
+    max-width: min(380px, calc(100vw - 28px));
+    width: 100%;
     pointer-events: none;
+    /* isolate stacking context; avoid repainting the whole page */
+    contain: layout style;
 }
 
+/* Only transform + opacity — compositor thread friendly */
 @keyframes toastIn {
-    from { opacity: 0; transform: translateX(24px) scale(0.98); }
-    to { opacity: 1; transform: translateX(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translate3d(16px, 0, 0) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
 }
 
 @keyframes toastOut {
-    from { opacity: 1; transform: translateX(0) scale(1); }
-    to { opacity: 0; transform: translateX(24px) scale(0.98); }
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(12px, 0, 0) scale(0.97);
+    }
+}
+
+@keyframes toastProgress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
 }
 
 .hud-toast {
     pointer-events: auto;
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--ink-2), var(--ink-3));
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-    color: #f1f5f9;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px 16px;
+    border-radius: 14px;
+    overflow: hidden;
+    color: #f8fafc;
     font-family: var(--font-body);
     font-size: 0.9rem;
-    animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    background: linear-gradient(145deg, rgba(15, 39, 71, 0.94), rgba(10, 20, 40, 0.96));
+    /* lighter blur than before for better FPS on low-end phones */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    /* promote to own layer */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    animation: toastIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: transform, opacity;
 }
 
+.hud-toast::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #38bdf8, #2563eb);
+    border-radius: 14px 0 0 14px;
+}
+
+.hud-toast--success::before { background: linear-gradient(180deg, #34d399, #10b981); }
+.hud-toast--error::before { background: linear-gradient(180deg, #fb7185, #e11d2a); }
+.hud-toast--bonus::before { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.hud-toast--info::before { background: linear-gradient(180deg, #38bdf8, #2563eb); }
+
 .hud-toast--leaving {
-    animation: toastOut 0.25s ease forwards;
+    animation: toastOut 0.2s ease forwards;
+    pointer-events: none;
 }
 
 .hud-toast-icon {
     flex-shrink: 0;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    margin-top: 1px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-mono);
     font-weight: 700;
-    font-size: 0.75rem;
-    background: rgba(56, 189, 248, 0.15);
-    color: var(--accent-2);
+    font-size: 0.85rem;
+    background: rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
-.hud-toast--success .hud-toast-icon { background: rgba(16, 185, 129, 0.18); color: var(--accent-success); }
-.hud-toast--error .hud-toast-icon { background: rgba(225, 29, 42, 0.18); color: var(--accent-danger); }
-.hud-toast--bonus .hud-toast-icon { background: rgba(245, 179, 1, 0.2); color: #f5b301; }
+.hud-toast--success .hud-toast-icon {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+.hud-toast--error .hud-toast-icon {
+    background: rgba(225, 29, 42, 0.2);
+    color: #fda4af;
+    border-color: rgba(225, 29, 42, 0.3);
+}
+.hud-toast--bonus .hud-toast-icon {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.hud-toast-body {
+    flex: 1;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+.hud-toast-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.95);
+    margin-bottom: 3px;
+}
+
+.hud-toast--success .hud-toast-label { color: #6ee7b7; }
+.hud-toast--error .hud-toast-label { color: #fda4af; }
+.hud-toast--bonus .hud-toast-label { color: #fcd34d; }
+.hud-toast--info .hud-toast-label { color: #7dd3fc; }
 
 .hud-toast-message {
     flex: 1;
-    line-height: 1.35;
+    line-height: 1.4;
+    color: #f1f5f9;
+    word-break: break-word;
 }
 
 .hud-toast-close {
     flex-shrink: 0;
-    background: none;
-    border: none;
-    color: rgba(241, 245, 249, 0.6);
-    font-size: 1.1rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(241, 245, 249, 0.55);
+    font-size: 1.05rem;
     line-height: 1;
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 0;
+    transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .hud-toast-close:hover {
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
+}
+
+.hud-toast-progress {
+    position: absolute;
+    left: 4px;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    transform: scaleX(1);
+    transform-origin: left center;
+    background: linear-gradient(90deg, #38bdf8, #2563eb);
+    opacity: 0.9;
+    animation: toastProgress linear forwards;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.hud-toast--success .hud-toast-progress { background: linear-gradient(90deg, #34d399, #10b981); }
+.hud-toast--error .hud-toast-progress { background: linear-gradient(90deg, #fb7185, #e11d2a); }
+.hud-toast--bonus .hud-toast-progress { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+/* Drop will-change after enter to free GPU memory */
+.hud-toast--settled {
+    will-change: auto;
+}
+
+@media (max-width: 480px) {
+    #toast-stack {
+        left: 12px;
+        right: 12px;
+        max-width: none;
+        top: max(12px, env(safe-area-inset-top));
+    }
+    .hud-toast {
+        padding: 12px 14px 14px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hud-toast,
+    .hud-toast--leaving,
+    .hud-toast-progress {
+        animation: none !important;
+        transition: none !important;
+    }
+    .hud-toast {
+        opacity: 1;
+        transform: none;
+    }
+    .hud-toast--leaving {
+        opacity: 0;
+    }
 }
 
 /* ==========================================================================
