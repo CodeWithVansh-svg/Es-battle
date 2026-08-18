@@ -171,6 +171,17 @@ export async function apiMatchStatus(matchId) {
   return request(`/api/matches/status?matchId=${encodeURIComponent(matchId)}`);
 }
 
+export async function apiSubmitResult(matchId, winnerEmail) {
+  return request("/api/matches/result", {
+    method: "POST",
+    body: { matchId, winnerEmail },
+  });
+}
+
+export async function apiGetLeaderboard(limit = 20) {
+  return request(`/api/leaderboard?limit=${encodeURIComponent(limit)}`, { auth: false });
+}
+
 export function apiLogout() {
   setToken("");
   setSessionUser(null);
