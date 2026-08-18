@@ -1301,7 +1301,7 @@ function formatTimeLabel(hhmm) {
     return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
-function loadMatchAdminForm(matchId) {
+function applyMatchAdminFormValues(matchId, data) {
     const nameEl = document.getElementById(`${matchId}-room-name`);
     const passEl = document.getElementById(`${matchId}-room-password`);
     const descEl = document.getElementById(`${matchId}-description`);
@@ -1309,17 +1309,20 @@ function loadMatchAdminForm(matchId) {
     const timeEl = document.getElementById(`${matchId}-timing-time`);
     const statusEl = document.getElementById(`${matchId}-admin-status`);
 
-    if (nameEl) nameEl.value = localStorage.getItem(`${matchId}-room-name`) || "";
-    if (passEl) passEl.value = localStorage.getItem(`${matchId}-room-password`) || "";
-    if (descEl) descEl.value = localStorage.getItem(`${matchId}-description`) || "";
+    const name = data.room_name ?? localStorage.getItem(`${matchId}-room-name`) ?? "";
+    const password = data.room_password ?? localStorage.getItem(`${matchId}-room-password`) ?? "";
+    const description = data.description ?? localStorage.getItem(`${matchId}-description`) ?? "";
+    const mode = data.timing_mode ?? localStorage.getItem(`${matchId}-timing-mode`) ?? "open";
+    const time = data.deadline ?? localStorage.getItem(`${matchId}-room-deadline`) ?? "";
 
-    const mode = localStorage.getItem(`${matchId}-timing-mode`) || "open";
-    const time = localStorage.getItem(`${matchId}-room-deadline`) || "";
+    if (nameEl) nameEl.value = name;
+    if (passEl) passEl.value = password;
+    if (descEl) descEl.value = description;
     if (modeEl) modeEl.value = mode;
-    if (timeEl) timeEl.value = time;
+    if (timeEl) timeEl.value = time || "";
 
     if (statusEl) {
-        const hasRoom = !!(localStorage.getItem(`${matchId}-room-name`) && localStorage.getItem(`${matchId}-room-password`));
+        const hasRoom = !!(name && password);
         if (!hasRoom) {
             statusEl.textContent = "Not configured yet.";
         } else if (mode === "open") {
@@ -1332,6 +1335,49 @@ function loadMatchAdminForm(matchId) {
             statusEl.textContent = "Saved.";
         }
     }
+}
+
+function loadMatchAdminForm(matchId) {
+    // Always paint from local cache first for instant UI.
+    applyMatchAdminFormValues(matchId, {});
+
+    if (!remoteMode) return;
+
+    // Sync from server so a reset on any device clears name/password/description/time.
+    apiGetRoom(matchId).then((res) => {
+        const room = res?.room || {};
+        const configured = Boolean(room.configured);
+        if (!configured) {
+            localStorage.removeItem(`${matchId}-room-name`);
+            localStorage.removeItem(`${matchId}-room-password`);
+            localStorage.removeItem(`${matchId}-description`);
+            localStorage.removeItem(`${matchId}-room-deadline`);
+            localStorage.removeItem(`${matchId}-timing-mode`);
+            applyMatchAdminFormValues(matchId, {
+                room_name: "",
+                room_password: "",
+                description: "",
+                timing_mode: "open",
+                deadline: ""
+            });
+            return;
+        }
+        localStorage.setItem(`${matchId}-room-name`, room.room_name || "");
+        localStorage.setItem(`${matchId}-description`, room.description || "");
+        localStorage.setItem(`${matchId}-timing-mode`, room.timing_mode || "open");
+        if (room.deadline) {
+            localStorage.setItem(`${matchId}-room-deadline`, room.deadline);
+        } else {
+            localStorage.removeItem(`${matchId}-room-deadline`);
+        }
+        applyMatchAdminFormValues(matchId, {
+            room_name: room.room_name || "",
+            room_password: localStorage.getItem(`${matchId}-room-password`) || "",
+            description: room.description || "",
+            timing_mode: room.timing_mode || "open",
+            deadline: room.deadline || ""
+        });
+    }).catch(() => { /* offline: keep local */ });
 }
 
 function saveMatchAdmin(matchId, label) {
