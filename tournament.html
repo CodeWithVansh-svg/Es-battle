@@ -83,7 +83,7 @@
                             <p id="lonewolf-countdown" class="text-2xl font-black text-indigo-700 tabular-nums">--:--:--</p>
                         </div>
                         <div id="lonewolf-result-submit" class="mt-4 hidden space-y-2">
-                            <p class="text-sm font-semibold text-gray-700 text-center">Who won?</p>
+                            <p class="text-sm font-semibold text-gray-700 text-center">Kaun jeeta?</p>
                             <div class="flex flex-wrap gap-2 justify-center">
                                 <button type="button" id="lonewolf-winner-p1" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow hover:bg-emerald-700">🏆 P1 Wins</button>
                                 <button type="button" id="lonewolf-winner-p2" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow hover:bg-emerald-700">🏆 P2 Wins</button>
@@ -97,7 +97,7 @@
                             <p id="lonewolf-result-title" class="text-lg font-bold leading-snug"></p>
                             <p id="lonewolf-result-prize" class="mt-2 text-amber-300 font-semibold"></p>
                             <button type="button" id="lonewolf-share-btn" class="mt-4 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg hover:opacity-95">
-                                📤 Share result image
+                                📤 Result image share karo
                             </button>
                             <a id="lonewolf-share-download" class="hidden" download="es-battle-result.png"></a>
                         </div>
@@ -156,7 +156,7 @@
                             <p id="cs1v1-countdown" class="text-2xl font-black text-indigo-700 tabular-nums">--:--:--</p>
                         </div>
                         <div id="cs1v1-result-submit" class="mt-4 hidden space-y-2">
-                            <p class="text-sm font-semibold text-gray-700 text-center">Who won?</p>
+                            <p class="text-sm font-semibold text-gray-700 text-center">Kaun jeeta?</p>
                             <div class="flex flex-wrap gap-2 justify-center">
                                 <button type="button" id="cs1v1-winner-p1" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow hover:bg-emerald-700">🏆 P1 Wins</button>
                                 <button type="button" id="cs1v1-winner-p2" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow hover:bg-emerald-700">🏆 P2 Wins</button>
@@ -170,7 +170,7 @@
                             <p id="cs1v1-result-title" class="text-lg font-bold leading-snug"></p>
                             <p id="cs1v1-result-prize" class="mt-2 text-amber-300 font-semibold"></p>
                             <button type="button" id="cs1v1-share-btn" class="mt-4 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg hover:opacity-95">
-                                📤 Share result image
+                                📤 Result image share karo
                             </button>
                             <a id="cs1v1-share-download" class="hidden" download="es-battle-result.png"></a>
                         </div>
@@ -191,6 +191,7 @@
                 apiSubmitResult,
                 getToken
             } from './js/api-client.js';
+            import { showToast } from './js/toast.js';
 
             (async function () {
                 const remoteMode = await isRemoteApiAvailable();
@@ -418,6 +419,36 @@
                     let cachedPlayers = [];
                     let cachedResult = null;
 
+                    function bindCopyBtn(btn) {
+                        if (!btn || btn.dataset.copyBound) return;
+                        btn.dataset.copyBound = '1';
+                        btn.addEventListener('click', async () => {
+                            const val = btn.getAttribute('data-copy') || '';
+                            const prev = btn.textContent;
+                            const ok = () => {
+                                btn.textContent = '✓ Copy ho gaya';
+                                showToast('Clipboard mein copy ho gaya.', 'success', 2000);
+                                setTimeout(() => { btn.textContent = prev; }, 1500);
+                            };
+                            try {
+                                await navigator.clipboard.writeText(val);
+                                ok();
+                            } catch (_) {
+                                try {
+                                    const ta = document.createElement('textarea');
+                                    ta.value = val;
+                                    document.body.appendChild(ta);
+                                    ta.select();
+                                    document.execCommand('copy');
+                                    ta.remove();
+                                    ok();
+                                } catch (e2) {
+                                    showToast('Copy nahi ho paya. Manually select karo.', 'error');
+                                }
+                            }
+                        });
+                    }
+
                     function formatCountdown(ms) {
                         if (ms <= 0) return '00:00:00';
                         const totalSec = Math.floor(ms / 1000);
@@ -449,7 +480,7 @@
                         if (!resultCard || !result) return;
                         const title = `${displayName} — ${result.winnerUsername} defeated ${result.loserUsername} — ${result.prizeCoins || PRIZE_COINS} coins won`;
                         if (resultTitle) resultTitle.textContent = title;
-                        if (resultPrize) resultPrize.textContent = `🏆 Winner takes ${result.prizeCoins || PRIZE_COINS} coins`;
+                        if (resultPrize) resultPrize.textContent = `🏆 Winner ko ${result.prizeCoins || PRIZE_COINS} coins milte hain`;
                         resultCard.classList.remove('hidden');
                         if (resultSubmit) resultSubmit.classList.add('hidden');
                         cachedResult = result;
@@ -487,17 +518,19 @@
                     }
 
                     async function declareWinner(winnerEmail) {
-                        if (resultMsg) resultMsg.textContent = 'Submitting result…';
+                        if (resultMsg) resultMsg.textContent = 'Result submit ho raha hai…';
                         if (remoteMode) {
                             try {
                                 const data = await apiSubmitResult(matchId, winnerEmail);
                                 const result = data.result;
                                 showResultCard(result);
-                                if (resultMsg) resultMsg.textContent = 'Result saved — leaderboard updated!';
+                                if (resultMsg) resultMsg.textContent = 'Result save ho gaya — leaderboard update ho gaya!';
+                                showToast('Result save ho gaya. Winner ko 15 coins mile.', 'success');
                                 // Soft ping leaderboard page storage so it can refresh
                                 localStorage.setItem('es-battle-leaderboard-ping', String(Date.now()));
                             } catch (err) {
-                                if (resultMsg) resultMsg.textContent = err.message || 'Could not submit result.';
+                                if (resultMsg) resultMsg.textContent = err.message || 'Result submit nahi ho paya.';
+                                showToast(err.message || 'Result submit nahi ho paya.', 'error');
                             }
                             return;
                         }
@@ -506,7 +539,7 @@
                         const winner = users.find((u) => (u.email || '').toLowerCase() === winnerEmail.toLowerCase());
                         const players = getJoinedPlayers(users);
                         if (players.length < 2 || !winner) {
-                            if (resultMsg) resultMsg.textContent = 'Need both players joined.';
+                            if (resultMsg) resultMsg.textContent = 'Pehle dono players ka join hona zaroori hai.';
                             return;
                         }
                         const loser = players.find((u) => (u.email || '').toLowerCase() !== winnerEmail.toLowerCase());
@@ -528,7 +561,8 @@
                         };
                         saveLocalResult(matchId, result);
                         showResultCard(result);
-                        if (resultMsg) resultMsg.textContent = 'Result saved — leaderboard updated!';
+                        if (resultMsg) resultMsg.textContent = 'Result save ho gaya — leaderboard update ho gaya!';
+                                showToast('Result save ho gaya. Winner ko 15 coins mile.', 'success');
                         localStorage.setItem('es-battle-leaderboard-ping', String(Date.now()));
                         refreshProfile();
                     }
@@ -673,7 +707,7 @@
                             return;
                         }
                         const text = ((roomCache[matchId] && roomCache[matchId].description) || localStorage.getItem(`${matchId}-description`) || '').trim();
-                        descriptionDisplay.textContent = text || 'No description added yet.';
+                        descriptionDisplay.textContent = text || 'Abhi koi description nahi hai.';
                     }
 
                     function updateDeadlineDisplay() {
@@ -690,14 +724,14 @@
                         joinDeadlineDisplay.classList.remove('hidden');
                         if (mode === 'at') {
                             joinDeadlineDisplay.textContent = Date.now() >= getDeadlineDateForToday(deadline).getTime()
-                                ? `Room is available now (from ${formatDeadline(deadline)}).`
-                                : `Room available at: ${formatDeadline(deadline)}`;
+                                ? `Room ab available hai (${formatDeadline(deadline)} se).`
+                                : `Room is time par available hoga: ${formatDeadline(deadline)}`;
                             return;
                         }
                         // before
                         joinDeadlineDisplay.textContent = isDeadlinePassed(deadline)
-                            ? `Join window closed for today (was ${formatDeadline(deadline)}).`
-                            : `Join before: ${formatDeadline(deadline)}`;
+                            ? `Aaj join window band ho chuka hai (deadline: ${formatDeadline(deadline)}).`
+                            : `Is time se pehle join karo: ${formatDeadline(deadline)}`;
                     }
 
                     function updateMatchStatus() {
@@ -717,17 +751,17 @@
                         }
 
                         if (joinClosed) {
-                            matchStatus.textContent = 'The join window for today has closed.';
+                            matchStatus.textContent = 'Aaj ke liye join window band ho chuka hai.';
                             if (joinButton) {
                                 joinButton.disabled = true;
                             }
                         } else if (playerCount >= 2) {
-                            matchStatus.textContent = 'Match full — 2 players have already joined.';
+                            matchStatus.textContent = 'Match full hai — 2 players already join kar chuke hain.';
                             if (joinButton) {
                                 joinButton.disabled = true;
                             }
                         } else {
-                            matchStatus.textContent = `${playerCount} / 2 players joined.`;
+                            matchStatus.textContent = `${playerCount} / 2 players join ho chuke hain.`;
                             if (joinButton) {
                                 joinButton.disabled = false;
                             }
@@ -754,43 +788,57 @@
                                 : new Date(deadlineDate.getTime() - 5 * 60 * 1000);
                             const revealTimeStr = revealDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                             // Note shown after user participates — time is whatever admin set.
-                            roomNameDisplay.textContent = `Room name and password available at ${revealTimeStr}`;
+                            roomNameDisplay.textContent = `Room name aur password is time par milega: ${revealTimeStr}`;
                             roomPassDisplay.textContent = mode === 'before'
-                                ? '(5 minutes before the match deadline)'
+                                ? '(Match deadline se 5 minute pehle)'
                                 : '';
                             return;
                         }
                         const name = (remoteJoinData && remoteJoinData.roomName) || state.roomName || (roomCache[matchId] && roomCache[matchId].room_name) || localStorage.getItem(`${matchId}-room-name`) || 'Not available';
                         const pass = (remoteJoinData && remoteJoinData.roomPassword) || state.roomPassword || localStorage.getItem(`${matchId}-room-password`) || 'Not available';
-                        roomNameDisplay.textContent = `Room Name: ${name}`;
-                        roomPassDisplay.textContent = `Room Password: ${pass}`;
+                        roomNameDisplay.innerHTML = `
+                            <span class="block mb-1">Room Name: <strong class="select-all" data-copy-val="${String(name).replace(/"/g, '&quot;')}">${name}</strong></span>
+                            <button type="button" class="copy-room-btn mt-1 px-3 py-1 text-xs font-bold rounded-lg bg-green-600 text-white hover:bg-green-700" data-copy="${String(name).replace(/"/g, '&quot;')}">📋 Copy name</button>
+                        `;
+                        roomPassDisplay.innerHTML = `
+                            <span class="block mb-1">Room Password: <strong class="select-all" data-copy-val="${String(pass).replace(/"/g, '&quot;')}">${pass}</strong></span>
+                            <button type="button" class="copy-room-btn mt-1 px-3 py-1 text-xs font-bold rounded-lg bg-green-600 text-white hover:bg-green-700" data-copy="${String(pass).replace(/"/g, '&quot;')}">📋 Copy password</button>
+                        `;
+                        roomNameDisplay.querySelectorAll('.copy-room-btn').forEach(bindCopyBtn);
+                        roomPassDisplay.querySelectorAll('.copy-room-btn').forEach(bindCopyBtn);
                     }
 
                     joinButton?.addEventListener('click', async () => {
                         const currentUser = getCurrentUser();
                         if (!currentUser) {
-                            joinMessage.textContent = 'Please log in first on the dashboard.';
+                            joinMessage.textContent = 'Pehle dashboard par login karo.';
                             return;
                         }
 
                         if (remoteMode) {
                             if (!getToken()) {
-                                joinMessage.textContent = 'Please log in again so the server can verify your account.';
+                                joinMessage.textContent = 'Server verify ke liye dobara login karo.';
                                 return;
                             }
                             try {
-                                joinMessage.textContent = 'Joining...';
+                                joinMessage.textContent = 'Join ho raha hai…';
                                 const data = await apiJoinMatch(matchId);
                                 await refreshRoomCache(matchId);
                                 joinMessage.textContent = data.alreadyJoined
-                                    ? 'You are already joined in the match.'
-                                    : `Joined ${displayName}! Room name and password will appear below when available.`;
+                                    ? 'Tum already is match mein join ho.'
+                                    : `${displayName} join ho gaya! Room name aur password neeche dikhenge jab available honge.`;
+                                showToast(
+                                    data.alreadyJoined
+                                        ? 'Tum already is match mein join ho.'
+                                        : `${displayName} successfully join ho gaya!`,
+                                    data.alreadyJoined ? 'info' : 'success'
+                                );
                                 const st = await apiMatchStatus(matchId);
                                 if (progressLabel) progressLabel.textContent = `${st.playerCount} / 2`;
                                 if (progressBar) progressBar.style.width = `${Math.min(st.playerCount, 2) / 2 * 100}%`;
                                 if (matchStatus) matchStatus.textContent = st.playerCount >= 2
-                                    ? 'Match full — 2 players have already joined.'
-                                    : `${st.playerCount} / 2 players joined.`;
+                                    ? 'Match full hai — 2 players already join kar chuke hain.'
+                                    : `${st.playerCount} / 2 players join ho chuke hain.`;
                                 // Respect admin timing: show "available at" note until reveal time
                                 showRoomInfoForUser(null, {
                                     joined: true,
@@ -799,7 +847,8 @@
                                 });
                                 refreshProfile();
                             } catch (error) {
-                                joinMessage.textContent = error.message || 'Could not join match.';
+                                joinMessage.textContent = error.message || 'Match join nahi ho paya.';
+                                showToast(error.message || 'Match join nahi ho paya.', 'error');
                             }
                             return;
                         }
@@ -812,32 +861,32 @@
                         const playerCount = joinedPlayers.length;
 
                         if (!user) {
-                            joinMessage.textContent = 'Unable to find your account.';
+                            joinMessage.textContent = 'Account nahi mila.';
                             return;
                         }
                         const deadline = getStoredDeadlineTime();
                         if (isJoinClosed(deadline)) {
-                            joinMessage.textContent = `The join window closed for today at ${formatDeadline(deadline)}.`;
+                            joinMessage.textContent = `Aaj join window ${formatDeadline(deadline)} par band ho gaya.`;
                             updateMatchStatus();
                             return;
                         }
                         if (!(roomCache[matchId] && roomCache[matchId].configured) && (!storedRoomName || !storedRoomPass)) {
-                            joinMessage.textContent = 'Room is not configured yet. Ask admin to save room settings first.';
+                            joinMessage.textContent = 'Room abhi set nahi hai. Pehle admin se room save karwao.';
                             return;
                         }
                         if (playerCount >= 2) {
-                            joinMessage.textContent = 'Match full — players have already joined the match.';
+                            joinMessage.textContent = 'Match full hai — players already join kar chuke hain.';
                             if (matchStatus) {
-                                matchStatus.textContent = 'Match full — 2 players have already joined.';
+                                matchStatus.textContent = 'Match full hai — 2 players already join kar chuke hain.';
                             }
                             return;
                         }
                         if ((user.coins ?? 0) < 10) {
-                            joinMessage.textContent = `Not enough coins to join ${displayName}.`;
+                            joinMessage.textContent = `${displayName} join ke liye coins kam hain.`;
                             return;
                         }
                         if (getMatchState(user).participated) {
-                            joinMessage.textContent = 'You are already joined in the match.';
+                            joinMessage.textContent = 'Tum already is match mein join ho.';
                             return;
                         }
 
@@ -845,7 +894,8 @@
                         setMatchState(user, { participated: true, roomName: storedRoomName, roomPassword: storedRoomPass });
                         saveUsers(users);
 
-                        joinMessage.textContent = `Joined ${displayName}! Room name and password will appear below when available.`;
+                        joinMessage.textContent = `${displayName} join ho gaya! Room name aur password neeche dikhenge jab available honge.`;
+                        showToast(`${displayName} successfully join ho gaya!`, "success");
                         showRoomInfoForUser(user);
                         updateMatchStatus();
                     });
@@ -866,9 +916,9 @@
                                 if (progressLabel) progressLabel.textContent = `${st.playerCount} / 2`;
                                 if (progressBar) progressBar.style.width = `${Math.min(st.playerCount, 2) / 2 * 100}%`;
                                 if (matchStatus) {
-                                    if (st.result) matchStatus.textContent = 'Match finished — see result below.';
-                                    else if (st.playerCount >= 2) matchStatus.textContent = 'Match full — 2 players have already joined.';
-                                    else matchStatus.textContent = `${st.playerCount} / 2 players joined.`;
+                                    if (st.result) matchStatus.textContent = 'Match khatam ho gaya — result neeche dekho.';
+                                    else if (st.playerCount >= 2) matchStatus.textContent = 'Match full hai — 2 players already join kar chuke hain.';
+                                    else matchStatus.textContent = `${st.playerCount} / 2 players join ho chuke hain.`;
                                 }
                                 updateVsPanel(st.players || [], st.result || null);
                                 if (st.joined) {
