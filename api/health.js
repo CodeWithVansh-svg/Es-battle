@@ -1,12 +1,20 @@
-import { json, handleOptions } from "../lib/auth.js";
+import { sql } from "../lib/db.js";
 
 export default async function handler(req, res) {
-  if (await handleOptions(req, res)) return;
-  const hasDb = Boolean(process.env.DATABASE_URL);
-  json(res, 200, {
-    ok: true,
-    api: true,
-    database: hasDb,
-    mode: hasDb ? "remote" : "missing-database-url",
-  });
+  try {
+    await sql`SELECT 1`;
+
+    return res.status(200).json({
+      ok: true,
+      database: "connected"
+    });
+  } catch (error) {
+    console.error("Health check failed:", error);
+
+    return res.status(500).json({
+      ok: false,
+      database: "error",
+      error: error.message
+    });
+  }
 }
