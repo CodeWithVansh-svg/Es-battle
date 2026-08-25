@@ -22,31 +22,74 @@ export default async function handler(req, res) {
     const ff_uid = String(body.ffUid || body.ff_uid || "").trim();
 
     if (!username || !email || !password) {
-      return json(res, 400, { error: "Username, email and password are required." });
+      return json(res, 400, {
+        error: "Username, email and password are required.",
+      });
     }
+
     if (password.length < 6) {
-      return json(res, 400, { error: "Password must be at least 6 characters." });
+      return json(res, 400, {
+        error: "Password must be at least 6 characters.",
+      });
     }
+
     if (isAdminEmail(email)) {
-      return json(res, 400, { error: "This email is reserved." });
+      return json(res, 400, {
+        error: "This email is reserved.",
+      });
     }
 
     const sql = getSql();
+
     await ensureAdminsSeeded(sql);
 
-    const existing = await sql`SELECT email FROM users WHERE email = ${email} LIMIT 1`;
+    const existing = await sql`
+      SELECT email
+      FROM users
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+
     if (existing.length) {
-      return json(res, 409, { error: "An account with this email already exists." });
+      return json(res, 409, {
+        error: "An account with this email already exists.",
+      });
     }
 
     const password_hash = await hashPassword(password);
     const id = genId();
+
     await sql`
-      INSERT INTO users (id, username, email, password_hash, phone, ff_uid, role, coins, win_coins)
-      VALUES (${id}, ${username}, ${email}, ${password_hash}, ${phone}, ${ff_uid}, 'user', 0, 0)
+      INSERT INTO users (
+        id,
+        username,
+        email,
+        password_hash,
+        phone,
+        ff_uid,
+        role,
+        coins,
+        win_coins
+      )
+      VALUES (
+        ${id},
+        ${username},
+        ${email},
+        ${password_hash},
+        ${phone},
+        ${ff_uid},
+        'user',
+        0,
+        0
+      )
     `;
 
-    const token = await signToken({ email, role: "user", username });
+    const token = await signToken({
+      email,
+      role: "user",
+      username,
+    });
+
     return json(res, 201, {
       success: true,
       token,
@@ -63,6 +106,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error(error);
-    return json(res, error.status || 500, { error: error.message || "Registration failed." });
+
+    return json(res, error.status || 500, {
+      error: error.message || "Registration failed.",
+    });
   }
 }
