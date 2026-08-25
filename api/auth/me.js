@@ -1,21 +1,55 @@
 import { getSql } from "../../lib/db.js";
-import { requireUser, json, handleOptions } from "../../lib/auth.js";
+import {
+  requireUser,
+  json,
+  handleOptions,
+} from "../../lib/auth.js";
 
 export default async function handler(req, res) {
   if (await handleOptions(req, res)) return;
-  if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
+
+  if (req.method !== "GET") {
+    return json(res, 405, {
+      error: "Method not allowed",
+    });
+  }
 
   try {
     const session = await requireUser(req);
     const sql = getSql();
+
     const rows = await sql`
-      SELECT id, username, email, phone, ff_uid, coins, win_coins, role, is_banned,
-             matches_played, matches_won, created_at
-      FROM users WHERE email = ${session.email} LIMIT 1
+      SELECT
+        id,
+        username,
+        email,
+        phone,
+        ff_uid,
+        coins,
+        win_coins,
+        role,
+        is_banned,
+        matches_played,
+        matches_won,
+        created_at
+      FROM users
+      WHERE email = ${session.email}
+      LIMIT 1
     `;
+
     const user = rows[0];
-    if (!user) return json(res, 404, { error: "User not found." });
-    if (user.is_banned) return json(res, 403, { error: "Account suspended." });
+
+    if (!user) {
+      return json(res, 404, {
+        error: "User not found.",
+      });
+    }
+
+    if (user.is_banned) {
+      return json(res, 403, {
+        error: "Account suspended.",
+      });
+    }
 
     return json(res, 200, {
       user: {
@@ -33,6 +67,8 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    return json(res, error.status || 500, { error: error.message || "Failed." });
+    return json(res, error.status || 500, {
+      error: error.message || "Failed.",
+    });
   }
 }
