@@ -3,18 +3,37 @@ import { requireAdmin, json, handleOptions } from "../../lib/auth.js";
 
 export default async function handler(req, res) {
   if (await handleOptions(req, res)) return;
-  if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
+
+  if (req.method !== "GET") {
+    return json(res, 405, {
+      error: "Method not allowed",
+    });
+  }
 
   try {
     await requireAdmin(req);
+
     const sql = getSql();
+
     const users = await sql`
-      SELECT id, username, email, phone, ff_uid, coins, win_coins, role, is_banned,
-             matches_played, matches_won, created_at
+      SELECT
+        id,
+        username,
+        email,
+        phone,
+        ff_uid,
+        coins,
+        win_coins,
+        role,
+        is_banned,
+        matches_played,
+        matches_won,
+        created_at
       FROM users
       ORDER BY created_at DESC
       LIMIT 500
     `;
+
     return json(res, 200, {
       users: users.map((u) => ({
         id: u.id,
@@ -32,6 +51,8 @@ export default async function handler(req, res) {
       })),
     });
   } catch (error) {
-    return json(res, error.status || 500, { error: error.message || "Failed." });
+    return json(res, error.status || 500, {
+      error: error.message || "Failed.",
+    });
   }
 }
