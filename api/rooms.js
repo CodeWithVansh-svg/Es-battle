@@ -15,7 +15,13 @@ export default async function handler(req, res) {
     const sql = getSql();
 
     if (req.method === "GET") {
-      const rows = await sql`SELECT * FROM match_rooms WHERE match_id = ${matchId} LIMIT 1`;
+      const rows = await sql`
+        SELECT *
+        FROM match_rooms
+        WHERE match_id = ${matchId}
+        LIMIT 1
+      `;
+
       const room = rows[0] || {
         match_id: matchId,
         room_name: "",
@@ -24,6 +30,7 @@ export default async function handler(req, res) {
         timing_mode: "open",
         deadline: null,
       };
+
       return json(res, 200, {
         room: {
           match_id: room.match_id,
@@ -31,30 +38,72 @@ export default async function handler(req, res) {
           description: room.description || "",
           timing_mode: room.timing_mode || "open",
           deadline: room.deadline || null,
-          configured: Boolean(room.room_name && room.room_password),
+          configured: Boolean(
+            room.room_name && room.room_password
+          ),
         },
       });
     }
 
     if (req.method === "PUT") {
       await requireAdmin(req);
+
       const body = await readBody(req);
-      const room_name = String(body.room_name || body.name || "").trim();
-      const room_password = String(body.room_password || body.password || "").trim();
-      const description = String(body.description || "").trim();
-      const timing_mode = String(body.timing_mode || "open").trim();
-      const deadline = body.deadline ? String(body.deadline).trim() : null;
+
+      const room_name = String(
+        body.room_name || body.name || ""
+      ).trim();
+
+      const room_password = String(
+        body.room_password || body.password || ""
+      ).trim();
+
+      const description = String(
+        body.description || ""
+      ).trim();
+
+      const timing_mode = String(
+        body.timing_mode || "open"
+      ).trim();
+
+      const deadline = body.deadline
+        ? String(body.deadline).trim()
+        : null;
 
       if (!room_name || !room_password) {
-        return json(res, 400, { error: "Room name and password are required." });
+        return json(res, 400, {
+          error: "Room name and password are required.",
+        });
       }
-      if (["before", "at"].includes(timing_mode) && !deadline) {
-        return json(res, 400, { error: "Time is required for this timing mode." });
+
+      if (
+        ["before", "at"].includes(timing_mode) &&
+        !deadline
+      ) {
+        return json(res, 400, {
+          error: "Time is required for this timing mode.",
+        });
       }
 
       await sql`
-        INSERT INTO match_rooms (match_id, room_name, room_password, description, timing_mode, deadline, updated_at)
-        VALUES (${matchId}, ${room_name}, ${room_password}, ${description}, ${timing_mode}, ${deadline}, NOW())
+        INSERT INTO match_rooms (
+          match_id,
+          room_name,
+          room_password,
+          description,
+          timing_mode,
+          deadline,
+          updated_at
+        )
+        VALUES (
+          ${matchId},
+          ${room_name},
+          ${room_password},
+          ${description},
+          ${timing_mode},
+          ${deadline},
+          NOW()
+        )
         ON CONFLICT (match_id) DO UPDATE SET
           room_name = EXCLUDED.room_name,
           room_password = EXCLUDED.room_password,
@@ -63,17 +112,23 @@ export default async function handler(req, res) {
           deadline = EXCLUDED.deadline,
           updated_at = NOW()
       `;
-      return json(res, 200, { success: true });
+
+      return json(res, 200, {
+        success: true,
+      });
     }
 
     if (req.method === "DELETE") {
       await requireAdmin(req);
 
-      // A room reset means the match cycle is over — free up both slots
-      // so the next round can be joined from scratch.
-      await sql`DELETE FROM match_joins WHERE match_id = ${matchId}`;
       await sql`
-        UPDATE match_rooms SET
+        DELETE FROM match_joins
+        WHERE match_id = ${matchId}
+      `;
+
+      await sql`
+        UPDATE match_rooms
+        SET
           room_name = '',
           room_password = '',
           description = '',
@@ -83,12 +138,19 @@ export default async function handler(req, res) {
         WHERE match_id = ${matchId}
       `;
 
-      return json(res, 200, { success: true });
+      return json(res, 200, {
+        success: true,
+      });
     }
 
-    return json(res, 405, { error: "Method not allowed" });
+    return json(res, 405, {
+      error: "Method not allowed",
+    });
   } catch (error) {
     console.error(error);
-    return json(res, error.status || 500, { error: error.message || "Failed." });
+
+    return json(res, error.status || 500, {
+      error: error.message || "Failed.",
+    });
   }
 }
